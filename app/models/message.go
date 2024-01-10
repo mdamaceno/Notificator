@@ -6,13 +6,30 @@ import (
 	"github.com/google/uuid"
 )
 
-type Payload map[string]interface{}
+type Payload struct {
+	Title string
+	Body  string
+}
+
+type IncomingPayload struct {
+	Title string `json:"title" validate:"required"`
+	Body  string `json:"body" validate:"required"`
+}
 
 type Message struct {
-	Id        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Service   string    `gorm:"type:varchar(255);not null"`
-	Payload   Payload   `gorm:"type:varchar(255);not null;serializer:json"`
-	SendAt    time.Time `gorm:"type:timestamp;"`
-	CreatedAt time.Time `gorm:"not null;"`
-	UpdatedAt time.Time `gorm:"not null;"`
+	Id        uuid.UUID  `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Service   string     `gorm:"type:varchar(255);not null"`
+	Payload   Payload    `gorm:"type:jsonb;not null;serializer:json"`
+	SendAt    *time.Time `gorm:"type:timestamp;"`
+	CreatedAt time.Time  `gorm:"not null;"`
+	UpdatedAt time.Time  `gorm:"not null;"`
+}
+
+type MessageReceiver []string
+
+type IncomingMessage struct {
+	Service   string          `json:"service" validate:"required"`
+	Payload   IncomingPayload `json:"payload" validate:"required"`
+	SendAt    string          `json:"send_at" validate:"datetime,omitempty"`
+	Receivers MessageReceiver `json:"receivers" validate:"required"`
 }

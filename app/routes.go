@@ -7,7 +7,7 @@ import (
 )
 
 func InitRoutes(e *echo.Echo, DB *gorm.DB) *echo.Echo {
-	messageController := controllers.MessageController{}
+	messageController := controllers.MessageController{DB: DB}
 	api := e.Group("/api")
 
 	api.POST("/message", messageController.Create)

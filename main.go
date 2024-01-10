@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/mdmaceno/notificator/config"
 
 func main() {
-	fmt.Println("Hello, World!")
+	env := config.Envs()
+	config.InitDB(env)
 }

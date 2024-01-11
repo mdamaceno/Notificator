@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mdmaceno/notificator/app/_validation"
 )
 
 var Services = struct {
@@ -73,4 +74,16 @@ func NewMessage(im *IncomingMessage) (Message, error) {
 
 	return message, nil
 }
+
+func (m Message) FilterEmails() []string {
+	emails := make([]string, 0)
+
+	for _, destination := range m.Destinations {
+		err := _validation.Validate.Var(destination.Receiver, "email")
+		if err == nil {
+			emails = append(emails, destination.Receiver)
+		}
+	}
+
+	return emails
 }

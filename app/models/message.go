@@ -6,14 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type Payload struct {
-	Title string
-	Body  string
-}
-
-type IncomingPayload struct {
-	Title string `json:"title" validate:"required"`
-	Body  string `json:"body" validate:"required"`
+var Services = struct {
+	Email string
+	SMS   string
+}{
+	Email: "email",
+	SMS:   "sms",
 }
 
 type Message struct {

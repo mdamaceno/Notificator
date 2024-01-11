@@ -4,6 +4,7 @@ const (
 	GENERIC_MESSAGE       string = "something_went_wrong"
 	INVALID_REQUEST       string = "invalid_request_body"
 	INTERNAL_SERVER_ERROR string = "internal_server_error"
+	NOT_ENOUGH_RECEIVERS  string = "not_enough_receivers"
 )
 
 type APIResponse struct {

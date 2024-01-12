@@ -25,6 +25,7 @@ services:
     depends_on:
       - db
       - dbtest
+      - mailcatcher
 
   app02:
     <<: *app
@@ -69,6 +70,13 @@ services:
       POSTGRES_PASSWORD: ${DB_TEST_PASS:-postgres}
       POSTGRES_DB: ${DB_TEST_NAME}
       TZ: ${TZ:-UTC}
+
+  mailcatcher:
+      restart: on-failure
+      image: dockage/mailcatcher:0.9.0
+      ports:
+      - "1080:1080"
+      - "1025:1025"
 
 volumes:
   db:

@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"net/smtp"
 	"time"
 
 	"github.com/google/uuid"
@@ -86,4 +88,32 @@ func (m Message) FilterEmails() []string {
 	}
 
 	return emails
+}
+
+func (m Message) SendMail() error {
+	emails := m.FilterEmails()
+
+	if len(emails) == 0 {
+		return errors.New("no email to send")
+	}
+
+	from := "from@email.com"
+	smtpHost := "mailcatcher"
+	smtpPort := "1025"
+
+	for _, email := range emails {
+		to := []string{email}
+		message := []byte("To: " + email + "\r\n" +
+			"Subject: " + m.Title + "\r\n" +
+			"\r\n" +
+			m.Body + "\r\n")
+
+		err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, to, message)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return nil
 }

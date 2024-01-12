@@ -53,4 +53,20 @@ func TestMessageModel(t *testing.T) {
 			assert.Equal(t, message.Destinations[0].Receiver, emails[0])
 		})
 	})
+
+	t.Run("SendMail", func(t *testing.T) {
+		t.Run("should return nothing when email is sent", func(t *testing.T) {
+			message := Message{
+				Title: "title",
+				Body:  "body",
+				Destinations: []Destination{
+					{Receiver: "johndoe@email.com"},
+				},
+			}
+
+			err := message.SendMail()
+
+			assert.Nil(t, err)
+		})
+	})
 }

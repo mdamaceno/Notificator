@@ -37,6 +37,8 @@ func (c MessageController) Create(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, response)
 	}
 
+	message.SendMail()
+
 	if err := c.DB.Create(&message).Error; err != nil {
 		response := _response.NewAPIErrorResponse(_response.INTERNAL_SERVER_ERROR, err.Error())
 		return ctx.JSON(http.StatusInternalServerError, response)

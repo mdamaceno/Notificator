@@ -2,12 +2,11 @@ package models
 
 import (
 	"errors"
-	"fmt"
-	"net/smtp"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/mdmaceno/notificator/app/_validation"
+	"github.com/mdmaceno/notificator/app/services"
 )
 
 var Services = struct {
@@ -90,29 +89,17 @@ func (m Message) FilterEmails() []string {
 	return emails
 }
 
-func (m Message) SendMail() error {
+func (m Message) Send() error {
 	emails := m.FilterEmails()
 
 	if len(emails) == 0 {
 		return errors.New("no email to send")
 	}
 
-	from := "from@email.com"
-	smtpHost := "mailcatcher"
-	smtpPort := "1025"
+	errList := services.SendEmail(emails, m.Title, m.Body)
 
-	for _, email := range emails {
-		to := []string{email}
-		message := []byte("To: " + email + "\r\n" +
-			"Subject: " + m.Title + "\r\n" +
-			"\r\n" +
-			m.Body + "\r\n")
-
-		err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, to, message)
-
-		if err != nil {
-			fmt.Println(err)
-		}
+	if len(errList) > 0 {
+		return errList[0]
 	}
 
 	return nil

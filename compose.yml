@@ -19,6 +19,9 @@ services:
       DB_TEST_NAME: ${DB_TEST_NAME}
       DB_TEST_HOST: ${DB_TEST_HOST:-dbtest}
       DB_TEST_PORT: ${DB_TEST_PORT:-5432}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_FROM: ${EMAIL_FROM}
       TZ: ${TZ:-UTC}
     volumes:
       - .:/opt/app/api

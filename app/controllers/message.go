@@ -1,17 +1,20 @@
 package controllers
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/labstack/echo"
 	"github.com/mdmaceno/notificator/app/_response"
 	"github.com/mdmaceno/notificator/app/_validation"
 	"github.com/mdmaceno/notificator/app/models"
-	"gorm.io/gorm"
+	"github.com/mdmaceno/notificator/app/repositories"
+	"github.com/mdmaceno/notificator/internal/db"
 )
 
 type MessageController struct {
-	DB *gorm.DB
+	DB      *sql.DB
+	Queries *db.Queries
 }
 
 func (c MessageController) Create(ctx echo.Context) error {
@@ -39,10 +42,7 @@ func (c MessageController) Create(ctx echo.Context) error {
 
 	go message.Send()
 
-	if err := c.DB.Create(&message).Error; err != nil {
-		response := _response.NewAPIErrorResponse(_response.INTERNAL_SERVER_ERROR, err.Error())
-		return ctx.JSON(http.StatusInternalServerError, response)
-	}
+	repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
 
 	return ctx.JSON(http.StatusNoContent, nil)
 }

@@ -7,11 +7,11 @@ import (
 )
 
 type Destination struct {
-	Id        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	MessageId uuid.UUID `gorm:"type:uuid;not null"`
-	Receiver  string    `gorm:"type:varchar(255);not null;"`
-	CreatedAt time.Time `gorm:"not null;"`
-	UpdatedAt time.Time `gorm:"not null;"`
+	Id        uuid.UUID
+	MessageId uuid.UUID
+	Receiver  string
+	CreatedAt time.Time `
+	UpdatedAt time.Time `
 
 	Message Message
 }

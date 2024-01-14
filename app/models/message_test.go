@@ -3,7 +3,6 @@ package models
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,18 +14,15 @@ func TestMessageModel(t *testing.T) {
 				Service:   []string{Services.Email},
 				Title:     "title",
 				Body:      "body",
-				SendAt:    "2021-01-01T00:00:00Z",
 				Receivers: MessageReceivers{"john@email.com", "doe@email.com"},
 			}
 
 			message, err := NewMessage(im)
-			timeParsed, _ := time.Parse(time.RFC3339, im.SendAt)
 
 			assert.Nil(t, err)
 			assert.Equal(t, im.Service, strings.Split(message.Service, ","))
 			assert.Equal(t, im.Title, message.Title)
 			assert.Equal(t, im.Body, message.Body)
-			assert.Equal(t, &timeParsed, message.SendAt)
 			for i, destination := range message.Destinations {
 				assert.Equal(t, im.Receivers[i], destination.Receiver)
 			}

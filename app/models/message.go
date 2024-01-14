@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,7 +33,7 @@ type Message struct {
 type MessageReceivers []string
 
 type IncomingMessage struct {
-	Service   string           `json:"service" validate:"required"`
+	Service   []string         `json:"service" validate:"required"`
 	Title     string           `json:"title" validate:"required"`
 	Body      string           `json:"body" validate:"required"`
 	SendAt    string           `json:"send_at" validate:"datetime,omitempty"`
@@ -48,7 +49,7 @@ func NewMessage(im *IncomingMessage) (Message, error) {
 
 	message := Message{
 		Id:      messageId,
-		Service: im.Service,
+		Service: strings.Join(im.Service, ","),
 		Title:   im.Title,
 		Body:    im.Body,
 	}

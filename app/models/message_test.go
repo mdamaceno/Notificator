@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -11,7 +12,7 @@ func TestMessageModel(t *testing.T) {
 	t.Run("NewMessage", func(t *testing.T) {
 		t.Run("should return message when message params is not nil", func(t *testing.T) {
 			im := &IncomingMessage{
-				Service:   "email",
+				Service:   []string{Services.Email},
 				Title:     "title",
 				Body:      "body",
 				SendAt:    "2021-01-01T00:00:00Z",
@@ -22,7 +23,7 @@ func TestMessageModel(t *testing.T) {
 			timeParsed, _ := time.Parse(time.RFC3339, im.SendAt)
 
 			assert.Nil(t, err)
-			assert.Equal(t, im.Service, message.Service)
+			assert.Equal(t, im.Service, strings.Split(message.Service, ","))
 			assert.Equal(t, im.Title, message.Title)
 			assert.Equal(t, im.Body, message.Body)
 			assert.Equal(t, &timeParsed, message.SendAt)

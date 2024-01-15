@@ -15,7 +15,6 @@ type MessageRepository struct {
 
 func (mr MessageRepository) CreateMessage(message models.Message) error {
 	tx, err := mr.DB.Begin()
-	ctx := context.Background()
 
 	if err != nil {
 		return err
@@ -23,6 +22,7 @@ func (mr MessageRepository) CreateMessage(message models.Message) error {
 
 	defer tx.Rollback()
 	qtx := mr.Queries.WithTx(tx)
+	ctx := context.Background()
 
 	m, err := qtx.CreateMessage(ctx, db.CreateMessageParams{
 		Title:   message.Title,
@@ -45,7 +45,11 @@ func (mr MessageRepository) CreateMessage(message models.Message) error {
 		return err
 	}
 
-	tx.Commit()
+	err = tx.Commit()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

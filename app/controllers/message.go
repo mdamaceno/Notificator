@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -42,7 +43,11 @@ func (c MessageController) Create(ctx echo.Context) error {
 
 	go message.Send()
 
-	repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
+	err = repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
+
+	if err != nil {
+		log.Println(err)
+	}
 
 	return ctx.JSON(http.StatusNoContent, nil)
 }

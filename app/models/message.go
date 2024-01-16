@@ -2,20 +2,37 @@ package models
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mdmaceno/notificator/app/_validation"
 	"github.com/mdmaceno/notificator/app/services"
+	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-var Services = struct {
+type Email interface {
+	Send(receivers []string, title string, body string) []error
+}
+
+type SMS interface {
+	Send(receivers []string, message string) []error
+}
+
+var MessageType = struct {
 	Email string
 	SMS   string
 }{
 	Email: "email",
 	SMS:   "sms",
+}
+
+var service = struct {
+	Email Email
+	SMS   SMS
+}{
+	Email: services.SendgridService{},
+	SMS:   services.TwilioSMSService{},
 }
 
 type Message struct {
@@ -69,7 +86,7 @@ func (m Message) FilterEmails() []string {
 	emails := make([]string, 0)
 
 	for _, destination := range m.Destinations {
-		err := _validation.Validate.Var(destination.Receiver, "email")
+		err := helpers.Validate.Var(destination.Receiver, "email")
 		if err == nil {
 			emails = append(emails, destination.Receiver)
 		}
@@ -78,18 +95,52 @@ func (m Message) FilterEmails() []string {
 	return emails
 }
 
-func (m Message) Send() error {
-	emails := m.FilterEmails()
+func (m Message) FilterPhoneNumbers() []string {
+	phoneNumbers := make([]string, 0)
 
-	if len(emails) == 0 {
-		return errors.New("no email to send")
+	for _, destination := range m.Destinations {
+		err := helpers.Validate.Var(destination.Receiver, "e164")
+		if err == nil {
+			phoneNumbers = append(phoneNumbers, destination.Receiver)
+		}
 	}
 
-	errList := services.SendEmail(emails, m.Title, m.Body)
+	return phoneNumbers
+}
 
-	if len(errList) > 0 {
-		return errList[0]
+func (m Message) hasService(id string) bool {
+	s := strings.Split(m.Service, ",")
+	for _, v := range s {
+		if v == id {
+			return true
+		}
 	}
 
-	return nil
+	return false
+}
+
+func (m Message) Send() []error {
+	var errList []error
+
+	if m.hasService(MessageType.Email) {
+		emails := m.FilterEmails()
+		emailErr := service.Email.Send(emails, m.Title, m.Body)
+
+		for _, err := range emailErr {
+			log.Println(err)
+			errList = append(errList, err)
+		}
+	}
+
+	if m.hasService(MessageType.SMS) {
+		phoneNumbers := m.FilterPhoneNumbers()
+		smsErr := service.SMS.Send(phoneNumbers, m.Body)
+
+		for _, err := range smsErr {
+			log.Println(err)
+			errList = append(errList, err)
+		}
+	}
+
+	return errList
 }

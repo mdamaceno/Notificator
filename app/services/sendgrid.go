@@ -6,7 +6,9 @@ import (
 	"os"
 )
 
-func SendEmail(emails []string, title string, body string) []error {
+type SendgridService struct{}
+
+func (s SendgridService) Send(emails []string, title string, body string) []error {
 	from := os.Getenv("EMAIL_FROM")
 	host := os.Getenv("EMAIL_HOST")
 	port := os.Getenv("EMAIL_PORT")

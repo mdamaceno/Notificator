@@ -22,6 +22,9 @@ services:
       EMAIL_HOST: ${EMAIL_HOST}
       EMAIL_PORT: ${EMAIL_PORT}
       EMAIL_FROM: ${EMAIL_FROM}
+      SMS_FROM_NUMBER: ${SMS_FROM_NUMBER}
+      SMS_USERNAME: ${SMS_USERNAME}
+      SMS_PASSWORD: ${SMS_PASSWORD}
       TZ: ${TZ:-UTC}
     volumes:
       - .:/opt/app/api

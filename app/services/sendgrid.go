@@ -1,4 +1,4 @@
-package sendgrid
+package services
 
 import (
 	"log"

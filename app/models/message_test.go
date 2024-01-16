@@ -11,7 +11,7 @@ func TestMessageModel(t *testing.T) {
 	t.Run("NewMessage", func(t *testing.T) {
 		t.Run("should return message when message params is not nil", func(t *testing.T) {
 			im := &IncomingMessage{
-				Service:   []string{ServiceID.Email},
+				Service:   []string{MessageType.Email},
 				Title:     "title",
 				Body:      "body",
 				Receivers: MessageReceivers{"john@email.com", "doe@email.com"},

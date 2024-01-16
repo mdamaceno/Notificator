@@ -8,12 +8,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mdmaceno/notificator/app/services"
-	"github.com/mdmaceno/notificator/app/services/sendgrid"
-	"github.com/mdmaceno/notificator/app/services/twilio"
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-var ServiceID = struct {
+type Email interface {
+	Send(receivers []string, title string, body string) []error
+}
+
+type SMS interface {
+	Send(receivers []string, message string) []error
+}
+
+var MessageType = struct {
 	Email string
 	SMS   string
 }{
@@ -22,11 +28,11 @@ var ServiceID = struct {
 }
 
 var service = struct {
-	Email services.Email
-	SMS   services.SMS
+	Email Email
+	SMS   SMS
 }{
-	Email: sendgrid.SendgridService{},
-	SMS:   twilio.TwilioSMSService{},
+	Email: services.SendgridService{},
+	SMS:   services.TwilioSMSService{},
 }
 
 type Message struct {
@@ -116,7 +122,7 @@ func (m Message) hasService(id string) bool {
 func (m Message) Send() []error {
 	var errList []error
 
-	if m.hasService(ServiceID.Email) {
+	if m.hasService(MessageType.Email) {
 		emails := m.FilterEmails()
 		emailErr := service.Email.Send(emails, m.Title, m.Body)
 
@@ -126,7 +132,7 @@ func (m Message) Send() []error {
 		}
 	}
 
-	if m.hasService(ServiceID.SMS) {
+	if m.hasService(MessageType.SMS) {
 		phoneNumbers := m.FilterPhoneNumbers()
 		smsErr := service.SMS.Send(phoneNumbers, m.Body)
 

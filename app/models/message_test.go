@@ -4,7 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mdmaceno/notificator/app/services"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +11,7 @@ func TestMessageModel(t *testing.T) {
 	t.Run("NewMessage", func(t *testing.T) {
 		t.Run("should return message when message params is not nil", func(t *testing.T) {
 			im := &IncomingMessage{
-				Service:   []string{services.ServiceID.Email},
+				Service:   []string{ServiceID.Email},
 				Title:     "title",
 				Body:      "body",
 				Receivers: MessageReceivers{"john@email.com", "doe@email.com"},

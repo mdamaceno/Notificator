@@ -8,15 +8,24 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mdmaceno/notificator/app/services"
+	"github.com/mdmaceno/notificator/app/services/sendgrid"
 	"github.com/mdmaceno/notificator/app/services/twilio"
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-var service = struct {
+var ServiceID = struct {
 	Email string
-	SMS   services.SMS
+	SMS   string
 }{
 	Email: "email",
+	SMS:   "sms",
+}
+
+var service = struct {
+	Email services.Email
+	SMS   services.SMS
+}{
+	Email: sendgrid.SendgridService{},
 	SMS:   twilio.TwilioService{},
 }
 
@@ -95,7 +104,7 @@ func (m Message) FilterPhoneNumbers() []string {
 
 func (m Message) Send() []error {
 	emails := m.FilterEmails()
-	errList := services.SendEmail(emails, m.Title, m.Body)
+	errList := service.Email.Send(emails, m.Title, m.Body)
 
 	if len(errList) > 0 {
 		for _, err := range errList {

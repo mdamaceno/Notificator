@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -11,12 +12,12 @@ import (
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-var Services = struct {
+var service = struct {
 	Email string
-	SMS   string
+	SMS   services.SMS
 }{
 	Email: "email",
-	SMS:   "sms",
+	SMS:   twilio.TwilioService{},
 }
 
 type Message struct {
@@ -79,8 +80,8 @@ func (m Message) FilterEmails() []string {
 	return emails
 }
 
-func (m Message) Send() error {
-	emails := m.FilterEmails()
+func (m Message) FilterPhoneNumbers() []string {
+	phoneNumbers := make([]string, 0)
 
 	for _, destination := range m.Destinations {
 		err := helpers.Validate.Var(destination.Receiver, "e164")
@@ -89,11 +90,27 @@ func (m Message) Send() error {
 		}
 	}
 
+	return phoneNumbers
+}
+
+func (m Message) Send() []error {
+	emails := m.FilterEmails()
 	errList := services.SendEmail(emails, m.Title, m.Body)
 
 	if len(errList) > 0 {
-		return errList[0]
+		for _, err := range errList {
+			log.Println(err)
+		}
 	}
 
-	return nil
+	phoneNumbers := m.FilterPhoneNumbers()
+	service.SMS.Send(phoneNumbers, m.Body)
+
+	if len(errList) > 0 {
+		for _, err := range errList {
+			log.Println(err)
+		}
+	}
+
+	return errList
 }

@@ -26,7 +26,7 @@ var service = struct {
 	SMS   services.SMS
 }{
 	Email: sendgrid.SendgridService{},
-	SMS:   twilio.TwilioService{},
+	SMS:   twilio.TwilioSMSService{},
 }
 
 type Message struct {
@@ -102,22 +102,37 @@ func (m Message) FilterPhoneNumbers() []string {
 	return phoneNumbers
 }
 
-func (m Message) Send() []error {
-	emails := m.FilterEmails()
-	errList := service.Email.Send(emails, m.Title, m.Body)
-
-	if len(errList) > 0 {
-		for _, err := range errList {
-			log.Println(err)
+func (m Message) hasService(id string) bool {
+	s := strings.Split(m.Service, ",")
+	for _, v := range s {
+		if v == id {
+			return true
 		}
 	}
 
-	phoneNumbers := m.FilterPhoneNumbers()
-	service.SMS.Send(phoneNumbers, m.Body)
+	return false
+}
 
-	if len(errList) > 0 {
-		for _, err := range errList {
+func (m Message) Send() []error {
+	var errList []error
+
+	if m.hasService(ServiceID.Email) {
+		emails := m.FilterEmails()
+		emailErr := service.Email.Send(emails, m.Title, m.Body)
+
+		for _, err := range emailErr {
 			log.Println(err)
+			errList = append(errList, err)
+		}
+	}
+
+	if m.hasService(ServiceID.SMS) {
+		phoneNumbers := m.FilterPhoneNumbers()
+		smsErr := service.SMS.Send(phoneNumbers, m.Body)
+
+		for _, err := range smsErr {
+			log.Println(err)
+			errList = append(errList, err)
 		}
 	}
 

@@ -8,9 +8,9 @@ import (
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
-type TwilioService struct{}
+type TwilioSMSService struct{}
 
-func (s TwilioService) Send(receivers []string, message string) []error {
+func (s TwilioSMSService) Send(receivers []string, message string) []error {
 	var errList []error
 
 	client := twilioClient.NewRestClientWithParams(twilioClient.ClientParams{

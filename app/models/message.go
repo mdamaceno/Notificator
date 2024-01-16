@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mdmaceno/notificator/app/_validation"
 	"github.com/mdmaceno/notificator/app/services"
+	"github.com/mdmaceno/notificator/app/services/twilio"
+	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
 var Services = struct {
@@ -69,7 +70,7 @@ func (m Message) FilterEmails() []string {
 	emails := make([]string, 0)
 
 	for _, destination := range m.Destinations {
-		err := _validation.Validate.Var(destination.Receiver, "email")
+		err := helpers.Validate.Var(destination.Receiver, "email")
 		if err == nil {
 			emails = append(emails, destination.Receiver)
 		}
@@ -81,8 +82,11 @@ func (m Message) FilterEmails() []string {
 func (m Message) Send() error {
 	emails := m.FilterEmails()
 
-	if len(emails) == 0 {
-		return errors.New("no email to send")
+	for _, destination := range m.Destinations {
+		err := helpers.Validate.Var(destination.Receiver, "e164")
+		if err == nil {
+			phoneNumbers = append(phoneNumbers, destination.Receiver)
+		}
 	}
 
 	errList := services.SendEmail(emails, m.Title, m.Body)

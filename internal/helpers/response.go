@@ -1,4 +1,4 @@
-package _response
+package helpers
 
 const (
 	GENERIC_MESSAGE       string = "something_went_wrong"

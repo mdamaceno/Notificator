@@ -1,4 +1,4 @@
-module github.com/mdmaceno/notificator
+module github.com/mdamaceno/notificator
 
 go 1.21.0
 

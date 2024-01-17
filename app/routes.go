@@ -4,8 +4,8 @@ import (
 	"database/sql"
 
 	"github.com/labstack/echo"
-	"github.com/mdmaceno/notificator/app/controllers"
-	"github.com/mdmaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/app/controllers"
+	"github.com/mdamaceno/notificator/internal/db"
 )
 
 type Routes struct {

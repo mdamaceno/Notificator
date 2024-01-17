@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mdmaceno/notificator/internal/helpers"
+	"github.com/mdamaceno/notificator/internal/helpers"
 )
 
 var MessageType = struct {

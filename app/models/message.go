@@ -10,18 +10,6 @@ import (
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-type Email interface {
-	Send(receivers []string, title string, body string) []error
-}
-
-type SMS interface {
-	Send(receivers []string, message string) []error
-}
-
-type Whatsapp interface {
-	Send(receivers []string, message string) []error
-}
-
 var MessageType = struct {
 	Email    string
 	SMS      string
@@ -30,12 +18,6 @@ var MessageType = struct {
 	Email:    "email",
 	SMS:      "sms",
 	Whatsapp: "whatsapp",
-}
-
-type Sender struct {
-	Email    Email
-	SMS      SMS
-	Whatsapp Whatsapp
 }
 
 type Message struct {

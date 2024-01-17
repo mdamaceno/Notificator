@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mdmaceno/notificator/app/models"
 	"github.com/mdmaceno/notificator/app/repositories"
+	"github.com/mdmaceno/notificator/app/services"
 	"github.com/mdmaceno/notificator/internal/db"
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
@@ -15,6 +16,12 @@ import (
 type MessageController struct {
 	DB      *sql.DB
 	Queries *db.Queries
+}
+
+var sender models.Sender = models.Sender{
+	Email:    services.SendgridService{},
+	SMS:      services.TwilioSMSService{},
+	Whatsapp: services.TwilioWhatsappService{},
 }
 
 func (c MessageController) Create(ctx echo.Context) error {
@@ -39,6 +46,8 @@ func (c MessageController) Create(ctx echo.Context) error {
 		response := helpers.NewAPIErrorResponse(helpers.INTERNAL_SERVER_ERROR, err.Error())
 		return ctx.JSON(http.StatusInternalServerError, response)
 	}
+
+	message.Sender = sender
 
 	errList := message.Send()
 

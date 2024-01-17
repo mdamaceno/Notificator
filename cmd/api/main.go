@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo"
 	_ "github.com/lib/pq"
-	"github.com/mdmaceno/notificator/app"
-	"github.com/mdmaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/app"
+	"github.com/mdamaceno/notificator/internal/db"
 )
 
 func main() {

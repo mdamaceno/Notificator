@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/mdmaceno/notificator/app/models"
-	"github.com/mdmaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/app/models"
+	"github.com/mdamaceno/notificator/internal/db"
 )
 
 type MessageRepository struct {

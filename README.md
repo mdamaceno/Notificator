@@ -62,5 +62,5 @@ To test the app, just run `docker compose exec app01 go test ./...`.
 ## TODO
 
 - Slack Integration
-- Receive message from AMQP service (RabittMQ)
+- Receive message from AMQP service (RabbitMQ)
 - Integration tests

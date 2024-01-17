@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/mdmaceno/notificator/app/models"
-	"github.com/mdmaceno/notificator/app/repositories"
-	"github.com/mdmaceno/notificator/app/services"
-	"github.com/mdmaceno/notificator/internal/db"
-	"github.com/mdmaceno/notificator/internal/helpers"
+	"github.com/mdamaceno/notificator/app/models"
+	"github.com/mdamaceno/notificator/app/repositories"
+	"github.com/mdamaceno/notificator/app/services"
+	"github.com/mdamaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/internal/helpers"
 )
 
 type MessageController struct {

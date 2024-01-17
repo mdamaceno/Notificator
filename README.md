@@ -58,7 +58,7 @@ Content-Type: application/json
 POST /v1/message
 
 {
-    service: ["email", "sms", "whatsapp"],
+    "service": ["email", "sms", "whatsapp"],
     "title": "Hey!",
     "body": "What's up?",
     "receivers": [

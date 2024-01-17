@@ -51,6 +51,24 @@ func TestMessageModel(t *testing.T) {
 		})
 	})
 
+	t.Run("FilterPhoneNumbers", func(t *testing.T) {
+		t.Run("should return phone numbers when message has destinations", func(t *testing.T) {
+			message := Message{
+				Destinations: []Destination{
+					{Receiver: "john@email.com"},
+					{Receiver: "+628123456789"},
+					{Receiver: "+628123456780"},
+				},
+			}
+
+			phoneNumbers := message.FilterPhoneNumbers()
+
+			assert.Equal(t, 2, len(phoneNumbers))
+			assert.Equal(t, message.Destinations[1].Receiver, phoneNumbers[0])
+			assert.Equal(t, message.Destinations[2].Receiver, phoneNumbers[1])
+		})
+	})
+
 	t.Run("Send", func(t *testing.T) {
 		t.Run("should return nothing when email is sent", func(t *testing.T) {
 			message := Message{

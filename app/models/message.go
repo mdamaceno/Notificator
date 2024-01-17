@@ -19,20 +19,28 @@ type SMS interface {
 	Send(receivers []string, message string) []error
 }
 
-var MessageType = struct {
-	Email string
-	SMS   string
-}{
-	Email: "email",
-	SMS:   "sms",
+type Whatsapp interface {
+	Send(receivers []string, message string) []error
 }
 
-var service = struct {
-	Email Email
-	SMS   SMS
+var MessageType = struct {
+	Email    string
+	SMS      string
+	Whatsapp string
 }{
-	Email: services.SendgridService{},
-	SMS:   services.TwilioSMSService{},
+	Email:    "email",
+	SMS:      "sms",
+	Whatsapp: "whatsapp",
+}
+
+var Service = struct {
+	Email    Email
+	SMS      SMS
+	Whatsapp Whatsapp
+}{
+	Email:    services.SendgridService{},
+	SMS:      services.TwilioSMSService{},
+	Whatsapp: services.TwilioWhatsappService{},
 }
 
 type Message struct {
@@ -96,7 +104,7 @@ func (m Message) FilterEmails() []string {
 }
 
 func (m Message) FilterPhoneNumbers() []string {
-	phoneNumbers := make([]string, 0)
+	var phoneNumbers []string
 
 	for _, destination := range m.Destinations {
 		err := helpers.Validate.Var(destination.Receiver, "e164")
@@ -124,7 +132,7 @@ func (m Message) Send() []error {
 
 	if m.hasService(MessageType.Email) {
 		emails := m.FilterEmails()
-		emailErr := service.Email.Send(emails, m.Title, m.Body)
+		emailErr := Service.Email.Send(emails, m.Title, m.Body)
 
 		for _, err := range emailErr {
 			log.Println(err)
@@ -134,9 +142,19 @@ func (m Message) Send() []error {
 
 	if m.hasService(MessageType.SMS) {
 		phoneNumbers := m.FilterPhoneNumbers()
-		smsErr := service.SMS.Send(phoneNumbers, m.Body)
+		smsErr := Service.SMS.Send(phoneNumbers, m.Body)
 
 		for _, err := range smsErr {
+			log.Println(err)
+			errList = append(errList, err)
+		}
+	}
+
+	if m.hasService(MessageType.Whatsapp) {
+		phoneNumbers := m.FilterPhoneNumbers()
+		waErr := Service.Whatsapp.Send(phoneNumbers, m.Body)
+
+		for _, err := range waErr {
 			log.Println(err)
 			errList = append(errList, err)
 		}

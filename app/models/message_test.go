@@ -98,37 +98,85 @@ func TestMessageModel(t *testing.T) {
 			},
 		}
 
-		t.Run("should call email service when service contains email", func(t *testing.T) {
-			message.Service = strings.Join([]string{MessageType.Email}, ",")
-			message.Sender = Sender{
-				Email: mockEmailService,
-			}
+		t.Run("when email service is defined", func(t *testing.T) {
+			t.Run("should call email service when service contains email", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.Email}, ",")
+				message.Sender = Sender{
+					Email: mockEmailService,
+				}
 
-			err := message.Send()
+				err := message.Send()
 
-			assert.Empty(t, err)
+				assert.Empty(t, err)
+			})
 		})
 
-		t.Run("should call sms service when service contains sms", func(t *testing.T) {
-			message.Service = strings.Join([]string{MessageType.SMS}, ",")
-			message.Sender = Sender{
-				SMS: mockSMSService,
-			}
+		t.Run("when email service is not defined", func(t *testing.T) {
+			t.Run("should panic", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.Email}, ",")
+				message.Sender = Sender{
+					SMS:      mockSMSService,
+					Whatsapp: mockWhatsappService,
+				}
 
-			err := message.Send()
-
-			assert.Empty(t, err)
+				assert.Panics(t, func() {
+					message.Send()
+				})
+			})
 		})
 
-		t.Run("should call whatsapp service when service contains whatsapp", func(t *testing.T) {
-			message.Service = strings.Join([]string{MessageType.Whatsapp}, ",")
-			message.Sender = Sender{
-				Whatsapp: mockWhatsappService,
-			}
+		t.Run("when sms service is defined", func(t *testing.T) {
+			t.Run("should call sms service when service contains sms", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.SMS}, ",")
+				message.Sender = Sender{
+					SMS: mockSMSService,
+				}
 
-			err := message.Send()
+				err := message.Send()
 
-			assert.Empty(t, err)
+				assert.Empty(t, err)
+			})
+		})
+
+		t.Run("when sms service is not defined", func(t *testing.T) {
+			t.Run("should panic", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.SMS}, ",")
+				message.Sender = Sender{
+					Email:    mockEmailService,
+					Whatsapp: mockWhatsappService,
+				}
+
+				assert.Panics(t, func() {
+					message.Send()
+				})
+			})
+		})
+
+		t.Run("when whatsapp service is defined", func(t *testing.T) {
+			t.Run("should call whatsapp service when service contains whatsapp", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.Whatsapp}, ",")
+				message.Sender = Sender{
+					Whatsapp: mockWhatsappService,
+				}
+
+				err := message.Send()
+
+				assert.Empty(t, err)
+			})
+		})
+
+		t.Run("when whatsapp service is not defined", func(t *testing.T) {
+			t.Run("should panic", func(t *testing.T) {
+				message.Service = strings.Join([]string{MessageType.Whatsapp}, ",")
+				message.Sender = Sender{
+					Email: mockEmailService,
+					SMS:   mockSMSService,
+				}
+
+				assert.Panics(t, func() {
+					message.Send()
+				})
+			})
 		})
 	})
 }

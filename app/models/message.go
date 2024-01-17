@@ -7,32 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mdmaceno/notificator/app/services"
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
-type Email interface {
-	Send(receivers []string, title string, body string) []error
-}
-
-type SMS interface {
-	Send(receivers []string, message string) []error
-}
-
 var MessageType = struct {
-	Email string
-	SMS   string
+	Email    string
+	SMS      string
+	Whatsapp string
 }{
-	Email: "email",
-	SMS:   "sms",
-}
-
-var service = struct {
-	Email Email
-	SMS   SMS
-}{
-	Email: services.SendgridService{},
-	SMS:   services.TwilioSMSService{},
+	Email:    "email",
+	SMS:      "sms",
+	Whatsapp: "whatsapp",
 }
 
 type Message struct {
@@ -44,6 +29,7 @@ type Message struct {
 	UpdatedAt time.Time
 
 	Destinations []Destination
+	Sender       Sender
 }
 
 type MessageReceivers []string
@@ -96,7 +82,7 @@ func (m Message) FilterEmails() []string {
 }
 
 func (m Message) FilterPhoneNumbers() []string {
-	phoneNumbers := make([]string, 0)
+	var phoneNumbers []string
 
 	for _, destination := range m.Destinations {
 		err := helpers.Validate.Var(destination.Receiver, "e164")
@@ -108,7 +94,7 @@ func (m Message) FilterPhoneNumbers() []string {
 	return phoneNumbers
 }
 
-func (m Message) hasService(id string) bool {
+func (m Message) hasMessageType(id string) bool {
 	s := strings.Split(m.Service, ",")
 	for _, v := range s {
 		if v == id {
@@ -122,9 +108,9 @@ func (m Message) hasService(id string) bool {
 func (m Message) Send() []error {
 	var errList []error
 
-	if m.hasService(MessageType.Email) {
+	if m.hasMessageType(MessageType.Email) {
 		emails := m.FilterEmails()
-		emailErr := service.Email.Send(emails, m.Title, m.Body)
+		emailErr := m.Sender.Email.Send(emails, m.Title, m.Body)
 
 		for _, err := range emailErr {
 			log.Println(err)
@@ -132,11 +118,21 @@ func (m Message) Send() []error {
 		}
 	}
 
-	if m.hasService(MessageType.SMS) {
+	if m.hasMessageType(MessageType.SMS) {
 		phoneNumbers := m.FilterPhoneNumbers()
-		smsErr := service.SMS.Send(phoneNumbers, m.Body)
+		smsErr := m.Sender.SMS.Send(phoneNumbers, m.Body)
 
 		for _, err := range smsErr {
+			log.Println(err)
+			errList = append(errList, err)
+		}
+	}
+
+	if m.hasMessageType(MessageType.Whatsapp) {
+		phoneNumbers := m.FilterPhoneNumbers()
+		waErr := m.Sender.Whatsapp.Send(phoneNumbers, m.Body)
+
+		for _, err := range waErr {
 			log.Println(err)
 			errList = append(errList, err)
 		}

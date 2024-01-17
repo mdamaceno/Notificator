@@ -40,7 +40,11 @@ func (c MessageController) Create(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, response)
 	}
 
-	go message.Send()
+	errList := message.Send()
+
+	for _, err := range errList {
+		log.Println(err)
+	}
 
 	err = repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
 

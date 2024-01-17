@@ -42,13 +42,34 @@ SMS_PASSWORD=
 
 # Whatsapp service config
 WHATSAPP_FROM_NUMBER=
-WHATSAPP_USERNAME=${SMS_USERNAME} # this copies a value from SMS_USERNAME
-WHATSAPP_PASSWORD=${SMS_PASSWORD} # this copies a value from SMS_PASSWORD
+WHATSAPP_USERNAME=${SMS_USERNAME} # this copies the value from SMS_USERNAME
+WHATSAPP_PASSWORD=${SMS_PASSWORD} # this copies the value from SMS_PASSWORD
 ```
 
 You must have Docker and Docker Compose installed. Just type `docker compose up` in the terminal to run it.
 
 Following this instructions, the API will be available to accept requests on http://localhost:8080.
+
+For example:
+
+```
+Content-Type: application/json
+
+POST /v1/message
+
+{
+    service: ["email", "sms", "whatsapp"],
+    "title": "Hey!",
+    "body": "What's up?",
+    "receivers": [
+        "johndoe@email.com",
+        "maryjane@email.com",
+        "+5511988880000"
+    ]
+}
+```
+
+You can use whatever tool to test the request: curl, Insomnia, Postman, Bruno...
 
 **Mailcatcher** is in charge to intercept messages that use SMTP protocol on port 1025. You can change it if you want to use any other email service.
 The emails sent will be available on http://localhost:1080.

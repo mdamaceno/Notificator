@@ -1,20 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"log"
-	"os"
 
 	"github.com/labstack/echo"
-	_ "github.com/lib/pq"
 	"github.com/mdamaceno/notificator/app"
+	"github.com/mdamaceno/notificator/config"
 	"github.com/mdamaceno/notificator/internal/db"
 )
 
 func main() {
-	url := "postgresql://" + os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASS") + "@" + os.Getenv("DB_HOST") + ":" +
-		os.Getenv("DB_PORT") + "/" + os.Getenv("DB_NAME") + "?sslmode=disable"
-	dbconn, err := sql.Open("postgres", url)
+	dbconn, err := config.InitDB()
 
 	defer dbconn.Close()
 

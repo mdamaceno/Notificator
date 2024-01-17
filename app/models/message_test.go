@@ -7,6 +7,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type MockEmailService struct{}
+type MockSMSService struct{}
+type MockWhatsappService struct{}
+
+func (s MockEmailService) Send(receivers []string, title string, body string) []error {
+	return nil
+}
+
+func (s MockSMSService) Send(receivers []string, message string) []error {
+	return nil
+}
+
+func (s MockWhatsappService) Send(receivers []string, message string) []error {
+	return nil
+}
+
 func TestMessageModel(t *testing.T) {
 	t.Run("NewMessage", func(t *testing.T) {
 		t.Run("should return message when message params is not nil", func(t *testing.T) {
@@ -70,13 +86,44 @@ func TestMessageModel(t *testing.T) {
 	})
 
 	t.Run("Send", func(t *testing.T) {
-		t.Run("should return nothing when email is sent", func(t *testing.T) {
-			message := Message{
-				Title: "title",
-				Body:  "body hello world",
-				Destinations: []Destination{
-					{Receiver: "johndoe@email.com"},
-				},
+		mockEmailService := &MockEmailService{}
+		mockSMSService := &MockSMSService{}
+		mockWhatsappService := &MockWhatsappService{}
+
+		message := Message{
+			Title: "title",
+			Body:  "body hello world",
+			Destinations: []Destination{
+				{Receiver: "johndoe@email.com"},
+			},
+		}
+
+		t.Run("should call email service when service contains email", func(t *testing.T) {
+			message.Service = strings.Join([]string{MessageType.Email}, ",")
+			message.Sender = Sender{
+				Email: mockEmailService,
+			}
+
+			err := message.Send()
+
+			assert.Empty(t, err)
+		})
+
+		t.Run("should call sms service when service contains sms", func(t *testing.T) {
+			message.Service = strings.Join([]string{MessageType.SMS}, ",")
+			message.Sender = Sender{
+				SMS: mockSMSService,
+			}
+
+			err := message.Send()
+
+			assert.Empty(t, err)
+		})
+
+		t.Run("should call whatsapp service when service contains whatsapp", func(t *testing.T) {
+			message.Service = strings.Join([]string{MessageType.Whatsapp}, ",")
+			message.Sender = Sender{
+				Whatsapp: mockWhatsappService,
 			}
 
 			err := message.Send()

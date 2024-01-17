@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mdmaceno/notificator/app/services"
 	"github.com/mdmaceno/notificator/internal/helpers"
 )
 
@@ -33,14 +32,10 @@ var MessageType = struct {
 	Whatsapp: "whatsapp",
 }
 
-var Service = struct {
+type Sender struct {
 	Email    Email
 	SMS      SMS
 	Whatsapp Whatsapp
-}{
-	Email:    services.SendgridService{},
-	SMS:      services.TwilioSMSService{},
-	Whatsapp: services.TwilioWhatsappService{},
 }
 
 type Message struct {
@@ -52,6 +47,7 @@ type Message struct {
 	UpdatedAt time.Time
 
 	Destinations []Destination
+	Sender       Sender
 }
 
 type MessageReceivers []string
@@ -116,7 +112,7 @@ func (m Message) FilterPhoneNumbers() []string {
 	return phoneNumbers
 }
 
-func (m Message) hasService(id string) bool {
+func (m Message) hasMessageType(id string) bool {
 	s := strings.Split(m.Service, ",")
 	for _, v := range s {
 		if v == id {
@@ -130,9 +126,9 @@ func (m Message) hasService(id string) bool {
 func (m Message) Send() []error {
 	var errList []error
 
-	if m.hasService(MessageType.Email) {
+	if m.hasMessageType(MessageType.Email) {
 		emails := m.FilterEmails()
-		emailErr := Service.Email.Send(emails, m.Title, m.Body)
+		emailErr := m.Sender.Email.Send(emails, m.Title, m.Body)
 
 		for _, err := range emailErr {
 			log.Println(err)
@@ -140,9 +136,9 @@ func (m Message) Send() []error {
 		}
 	}
 
-	if m.hasService(MessageType.SMS) {
+	if m.hasMessageType(MessageType.SMS) {
 		phoneNumbers := m.FilterPhoneNumbers()
-		smsErr := Service.SMS.Send(phoneNumbers, m.Body)
+		smsErr := m.Sender.SMS.Send(phoneNumbers, m.Body)
 
 		for _, err := range smsErr {
 			log.Println(err)
@@ -150,9 +146,9 @@ func (m Message) Send() []error {
 		}
 	}
 
-	if m.hasService(MessageType.Whatsapp) {
+	if m.hasMessageType(MessageType.Whatsapp) {
 		phoneNumbers := m.FilterPhoneNumbers()
-		waErr := Service.Whatsapp.Send(phoneNumbers, m.Body)
+		waErr := m.Sender.Whatsapp.Send(phoneNumbers, m.Body)
 
 		for _, err := range waErr {
 			log.Println(err)

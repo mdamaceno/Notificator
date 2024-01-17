@@ -51,7 +51,7 @@ func (s TwilioWhatsappService) Send(receivers []string, message string) []error 
 		res, err := client.Api.CreateMessage(params)
 		if err != nil {
 			if *res.ErrorCode == 21608 && numberFromBrazil(receiver) {
-				receiver = s.remove9DigitBrazil(receiver)
+				receiver = remove9DigitBrazil(receiver)
 				params.SetTo("whatsapp:" + receiver)
 				res, err = client.Api.CreateMessage(params)
 				if err != nil {
@@ -68,7 +68,7 @@ func (s TwilioWhatsappService) Send(receivers []string, message string) []error 
 	return errList
 }
 
-func (s TwilioWhatsappService) remove9DigitBrazil(number string) string {
+func remove9DigitBrazil(number string) string {
 	countryCode := number[0:3]
 	phoneNumber := number[3:]
 

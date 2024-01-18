@@ -40,6 +40,39 @@ services:
     <<: *app
     hostname: app02
 
+  consumer:
+    build:
+      dockerfile: ./docker/consumer.Dockerfile
+      context: .
+    hostname: consumer
+    restart: always
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_TEST_USER: ${DB_TEST_USER:-postgres}
+      DB_TEST_PASS: ${DB_TEST_PASS:-postgres}
+      DB_TEST_NAME: ${DB_TEST_NAME}
+      DB_TEST_HOST: ${DB_TEST_HOST:-dbtest}
+      DB_TEST_PORT: ${DB_TEST_PORT:-5432}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_FROM: ${EMAIL_FROM}
+      SMS_FROM_NUMBER: ${SMS_FROM_NUMBER}
+      SMS_USERNAME: ${SMS_USERNAME}
+      SMS_PASSWORD: ${SMS_PASSWORD}
+      WHATSAPP_FROM_NUMBER: ${WHATSAPP_FROM_NUMBER}
+      WHATSAPP_USERNAME: ${WHATSAPP_USERNAME}
+      WHATSAPP_PASSWORD: ${WHATSAPP_PASSWORD}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - .:/opt/app/consumer
+    depends_on:
+      broker:
+        condition: service_healthy
+
   nginx:
     container_name: ${APP_ID:-app}-nginx
     image: nginx:1.25
@@ -81,11 +114,26 @@ services:
       TZ: ${TZ:-UTC}
 
   mailcatcher:
-      restart: on-failure
-      image: dockage/mailcatcher:0.9.0
-      ports:
+    restart: on-failure
+    image: dockage/mailcatcher:0.9.0
+    ports:
       - "1080:1080"
       - "1025:1025"
+
+  broker:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    volumes:
+        - ./docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./docker/rabbitmq/log/:/var/log/rabbitmq
+    healthcheck:
+        test: rabbitmq-diagnostics -q ping
+        interval: 10s
+        timeout: 3s
+        retries: 30
 
 volumes:
   db:

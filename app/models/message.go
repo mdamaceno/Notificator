@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"strings"
@@ -139,4 +140,21 @@ func (m Message) Send() []error {
 	}
 
 	return errList
+}
+
+func (m Message) FromJSON(body []byte) (Message, error) {
+	var im IncomingMessage
+
+	err := json.Unmarshal(body, &im)
+	if err != nil {
+		return Message{}, err
+	}
+
+	message, err := NewMessage(&im)
+
+	if err != nil {
+		return Message{}, err
+	}
+
+	return message, nil
 }

@@ -21,3 +21,6 @@
 *.log
 tmp/
 .bin/
+
+docker/rabbitmq/data/
+docker/rabbitmq/log/

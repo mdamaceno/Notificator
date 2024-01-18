@@ -81,11 +81,26 @@ services:
       TZ: ${TZ:-UTC}
 
   mailcatcher:
-      restart: on-failure
-      image: dockage/mailcatcher:0.9.0
-      ports:
+    restart: on-failure
+    image: dockage/mailcatcher:0.9.0
+    ports:
       - "1080:1080"
       - "1025:1025"
+
+  broker:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    volumes:
+        - ./docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./docker/rabbitmq/log/:/var/log/rabbitmq
+    healthcheck:
+        test: rabbitmq-diagnostics -q ping
+        interval: 10s
+        timeout: 3s
+        retries: 30
 
 volumes:
   db:

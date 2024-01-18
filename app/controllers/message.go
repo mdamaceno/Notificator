@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo"
 	"github.com/mdamaceno/notificator/app/models"
@@ -11,6 +12,13 @@ import (
 	"github.com/mdamaceno/notificator/app/services"
 	"github.com/mdamaceno/notificator/internal/db"
 	"github.com/mdamaceno/notificator/internal/helpers"
+	amqp "github.com/rabbitmq/amqp091-go"
+)
+
+var (
+	ErrLog            = log.New(os.Stderr, "[ERROR] ", log.LstdFlags|log.Lmsgprefix)
+	Log               = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lshortfile)
+	deliveryCount int = 0
 )
 
 type MessageController struct {
@@ -62,4 +70,46 @@ func (c MessageController) Create(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusNoContent, nil)
+}
+
+func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan error) {
+	cleanup := func() {
+		Log.Printf("handle: deliveries channel closed")
+		done <- nil
+	}
+
+	defer cleanup()
+	defer c.DB.Close()
+
+	for d := range deliveries {
+		deliveryCount++
+		Log.Printf(
+			"got %dB delivery: [%v] %q",
+			len(d.Body),
+			d.DeliveryTag,
+			d.Body,
+		)
+
+		d.Ack(false)
+
+		message, err := new(models.Message).FromJSON(d.Body)
+
+		if err != nil {
+			ErrLog.Printf("Error parsing message: %v", err)
+		}
+
+		message.Sender = sender
+
+		errList := message.Send()
+
+		for _, err := range errList {
+			ErrLog.Printf("Error sending message: %v", err)
+		}
+
+		err = repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
+
+		if err != nil {
+			ErrLog.Printf("Error saving message: %v", err)
+		}
+	}
 }

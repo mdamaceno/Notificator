@@ -76,6 +76,14 @@ The emails sent will be available on http://localhost:1080.
 
 **SMS** and **Whatsapp** messages are delivered by Twilio. You must have a Twilio account configured.
 
+Running all the containers, you can use the **producer** to send messages to the consumer using AMQP protocol.
+
+Open another tab in you terminal and run:
+
+```
+go run cmd/producer/main.go -s "email,sms,whatsapp" -t "Title" -m "Body" -r "email1@email.com,email2@email.com"
+```
+
 ## Test
 
 To test the app, just run `docker compose exec app01 go test ./...`.
@@ -83,5 +91,4 @@ To test the app, just run `docker compose exec app01 go test ./...`.
 ## TODO
 
 - Slack Integration
-- Receive message from AMQP service (RabbitMQ)
 - Integration tests

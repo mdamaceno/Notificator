@@ -95,6 +95,7 @@ func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan er
 
 		if err != nil {
 			helpers.ErrLog.Printf("Error parsing message: %v", err)
+			continue
 		}
 
 		message.Sender = sender

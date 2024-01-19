@@ -150,6 +150,12 @@ func (m Message) FromJSON(body []byte) (Message, error) {
 		return Message{}, err
 	}
 
+	err = helpers.Validate.Struct(im)
+
+	if err != nil {
+		return Message{}, err
+	}
+
 	message, err := NewMessage(&im)
 
 	if err != nil {

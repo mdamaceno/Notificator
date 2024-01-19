@@ -40,10 +40,10 @@ type Producer struct {
 }
 
 type Message struct {
-	Service   []string
-	Title     string
-	Body      string
-	Receivers []string
+	Service   []string `json:"service"`
+	Title     string   `json:"title"`
+	Body      string   `json:"body"`
+	Receivers []string `json:"receivers"`
 }
 
 func main() {
@@ -54,12 +54,6 @@ func main() {
 		Title:     *title,
 		Body:      *body,
 		Receivers: strings.Split(*receivers, ","),
-	}
-
-	err = validateMessageOpts(&message)
-
-	if err != nil {
-		ErrLog.Fatalf("%s", err)
 	}
 
 	producer, err := NewProducer(uri, exchangeName, exchangeType, queueName, bindingKey, ctag)
@@ -97,30 +91,6 @@ func openConnection(amqpURI string) (*amqp.Connection, error) {
 	}
 
 	return conn, nil
-}
-
-func validateMessageOpts(message *Message) error {
-	if message == nil {
-		return fmt.Errorf("message is nil")
-	}
-
-	if len(message.Service) == 0 {
-		return fmt.Errorf("service is empty")
-	}
-
-	if len(message.Title) == 0 {
-		return fmt.Errorf("title is empty")
-	}
-
-	if len(message.Body) == 0 {
-		return fmt.Errorf("body is empty")
-	}
-
-	if len(message.Receivers) == 0 {
-		return fmt.Errorf("receivers is empty")
-	}
-
-	return nil
 }
 
 func NewProducer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (*Producer, error) {

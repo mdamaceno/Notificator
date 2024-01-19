@@ -2,19 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
-
-type Producer struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	tag     string
-}
 
 var (
 	uri          = "amqp://guest:guest@localhost:5672/"
@@ -24,7 +20,10 @@ var (
 	bindingKey   = "notificator-key"
 	ctag         = "notificator-producer"
 	continuous   = false
-	body         = flag.String("m", "Message", "body of message")
+	service      = flag.String("s", "", "service names separated by comma")
+	title        = flag.String("t", "", "title of the message")
+	body         = flag.String("m", "", "body of the message")
+	receivers    = flag.String("r", "", "receivers separated by comma")
 	WarnLog      = log.New(os.Stderr, "[WARNING] ", log.LstdFlags|log.Lmsgprefix)
 	ErrLog       = log.New(os.Stderr, "[ERROR] ", log.LstdFlags|log.Lmsgprefix)
 	Log          = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lmsgprefix)
@@ -34,11 +33,39 @@ func init() {
 	flag.Parse()
 }
 
+type Producer struct {
+	conn    *amqp.Connection
+	channel *amqp.Channel
+	tag     string
+}
+
+type Message struct {
+	Service   []string
+	Title     string
+	Body      string
+	Receivers []string
+}
+
 func main() {
 	var err error
 
+	message := Message{
+		Service:   strings.Split(*service, ","),
+		Title:     *title,
+		Body:      *body,
+		Receivers: strings.Split(*receivers, ","),
+	}
+
+	err = validateMessageOpts(&message)
+
+	if err != nil {
+		ErrLog.Fatalf("%s", err)
+	}
+
 	producer, err := NewProducer(uri, exchangeName, exchangeType, queueName, bindingKey, ctag)
 	defer producer.channel.Close()
+
+	requestBody, err := json.Marshal(message)
 
 	err = producer.channel.PublishWithContext(
 		context.Background(),
@@ -48,7 +75,7 @@ func main() {
 		false,        // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body:        []byte(*body),
+			Body:        []byte(requestBody),
 		},
 	)
 
@@ -70,6 +97,30 @@ func openConnection(amqpURI string) (*amqp.Connection, error) {
 	}
 
 	return conn, nil
+}
+
+func validateMessageOpts(message *Message) error {
+	if message == nil {
+		return fmt.Errorf("message is nil")
+	}
+
+	if len(message.Service) == 0 {
+		return fmt.Errorf("service is empty")
+	}
+
+	if len(message.Title) == 0 {
+		return fmt.Errorf("title is empty")
+	}
+
+	if len(message.Body) == 0 {
+		return fmt.Errorf("body is empty")
+	}
+
+	if len(message.Receivers) == 0 {
+		return fmt.Errorf("receivers is empty")
+	}
+
+	return nil
 }
 
 func NewProducer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (*Producer, error) {

@@ -22,6 +22,7 @@ var (
 	exchangeType = "direct"
 	queueName    = "notificator-queue"
 	bindingKey   = "notificator-key"
+	ctag         = "notificator-producer"
 	continuous   = false
 	body         = flag.String("m", "Message", "body of message")
 	WarnLog      = log.New(os.Stderr, "[WARNING] ", log.LstdFlags|log.Lmsgprefix)
@@ -36,7 +37,7 @@ func init() {
 func main() {
 	var err error
 
-	producer, err := NewProducer(uri, exchangeName, exchangeType, queueName, bindingKey, "notificator-producer")
+	producer, err := NewProducer(uri, exchangeName, exchangeType, queueName, bindingKey, ctag)
 	defer producer.channel.Close()
 
 	err = producer.channel.PublishWithContext(
@@ -77,7 +78,7 @@ func NewProducer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 	p := &Producer{
 		conn:    nil,
 		channel: nil,
-		tag:     "",
+		tag:     ctag,
 	}
 
 	p.conn, err = openConnection(amqpURI)
@@ -135,7 +136,7 @@ func NewProducer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		ErrLog.Fatalf("%s", err)
 	}
 
-	Log.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", ctag)
+	Log.Printf("Queue bound to Exchange, starting Produce (producer tag %q)", p.tag)
 
 	if err := p.channel.Confirm(false); err != nil {
 		ErrLog.Fatalf("producer: channel could not be put into confirm mode: %s", err)

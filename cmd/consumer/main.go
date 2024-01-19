@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/mdamaceno/notificator/app/controllers"
 	"github.com/mdamaceno/notificator/config"
 	"github.com/mdamaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/internal/helpers"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -27,8 +26,6 @@ var (
 	bindingKey         = "notificator-key"
 	consumerTag        = "notificator-consumer"
 	connectionName     = "notificator-consumer"
-	ErrLog             = log.New(os.Stderr, "[ERROR] ", log.LstdFlags|log.Lmsgprefix)
-	Log                = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lshortfile)
 	deliveryCount  int = 0
 )
 
@@ -36,7 +33,7 @@ func main() {
 	dbconn, err := config.InitDB()
 
 	if err != nil {
-		ErrLog.Fatalf("Database: %s", err)
+		helpers.ErrLog.Printf("Database: %s", err)
 	}
 
 	defer dbconn.Close()
@@ -45,11 +42,11 @@ func main() {
 
 	c, err := NewConsumer(uri, exchangeName, exchangeType, queueName, bindingKey, consumerTag)
 	if err != nil {
-		ErrLog.Fatalf("%s", err)
+		helpers.ErrLog.Fatalf("%s", err)
 	}
 
 	c.done = make(chan error)
-	Log.Printf("running consumer...")
+	helpers.Log.Println("running consumer...")
 
 	messageController := controllers.MessageController{DB: dbconn, Queries: q}
 	messageController.Consume(c.deliveries, c.done)
@@ -69,22 +66,23 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 
 	config := amqp.Config{Properties: amqp.NewConnectionProperties()}
 	config.Properties.SetClientConnectionName(connectionName)
-	Log.Printf("dialing %q", amqpURI)
+	helpers.Log.Printf("dialing %q", amqpURI)
+
 	c.conn, err = amqp.DialConfig(amqpURI, config)
 	if err != nil {
 		return nil, fmt.Errorf("Dial: %s", err)
 	}
 
 	go func() {
-		Log.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
+		helpers.Log.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
 	}()
 
-	Log.Printf("got Connection, getting Channel")
+	helpers.Log.Printf("got Connection, getting Channel")
 	c.channel, err = c.conn.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
-	Log.Printf("got Channel, declaring Exchange (%q)", exchange)
+	helpers.Log.Printf("got Channel, declaring Exchange (%q)", exchange)
 
 	if err = c.channel.ExchangeDeclare(
 		exchange,     // name of the exchange
@@ -98,7 +96,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Exchange Declare: %s", err)
 	}
 
-	Log.Printf("declared Exchange, declaring Queue %q", queueName)
+	helpers.Log.Printf("declared Exchange, declaring Queue %q", queueName)
 	queue, err := c.channel.QueueDeclare(
 		queueName, // name of the queue
 		true,      // durable
@@ -112,7 +110,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Queue Declare: %s", err)
 	}
 
-	Log.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
+	helpers.Log.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
 		queue.Name, queue.Messages, queue.Consumers, key)
 
 	if err = c.channel.QueueBind(
@@ -125,7 +123,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Queue Bind: %s", err)
 	}
 
-	Log.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
+	helpers.Log.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
 	deliveries, err := c.channel.Consume(
 		queue.Name, // name
 		c.tag,      // consumerTag,

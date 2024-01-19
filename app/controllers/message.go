@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo"
 	"github.com/mdamaceno/notificator/app/models"
@@ -16,8 +14,6 @@ import (
 )
 
 var (
-	ErrLog            = log.New(os.Stderr, "[ERROR] ", log.LstdFlags|log.Lmsgprefix)
-	Log               = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lshortfile)
 	deliveryCount int = 0
 )
 
@@ -36,10 +32,12 @@ func (c MessageController) Create(ctx echo.Context) error {
 	messageParams := new(models.IncomingMessage)
 
 	if err := ctx.Bind(&messageParams); err != nil {
+		helpers.ErrLog.Printf("Error binding message: %v", err)
 		return ctx.JSON(http.StatusUnprocessableEntity, helpers.NewAPIErrorResponse(helpers.INVALID_REQUEST, nil))
 	}
 
 	if err := helpers.Validate.Struct(messageParams); err != nil {
+		helpers.ErrLog.Printf("Error validating message: %v", err)
 		mapErrors := helpers.MapValidationErrors(err)
 		return ctx.JSON(http.StatusUnprocessableEntity, helpers.NewAPIErrorResponse(helpers.INVALID_REQUEST, mapErrors))
 	}
@@ -51,6 +49,7 @@ func (c MessageController) Create(ctx echo.Context) error {
 	message, err := models.NewMessage(messageParams)
 
 	if err != nil {
+		helpers.ErrLog.Printf("Error creating message: %v", err)
 		response := helpers.NewAPIErrorResponse(helpers.INTERNAL_SERVER_ERROR, err.Error())
 		return ctx.JSON(http.StatusInternalServerError, response)
 	}
@@ -60,13 +59,13 @@ func (c MessageController) Create(ctx echo.Context) error {
 	errList := message.Send()
 
 	for _, err := range errList {
-		log.Println(err)
+		helpers.ErrLog.Printf("Error sending message: %v", err)
 	}
 
 	err = repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
 
 	if err != nil {
-		log.Println(err)
+		helpers.ErrLog.Printf("Error saving message: %v", err)
 	}
 
 	return ctx.JSON(http.StatusNoContent, nil)
@@ -74,7 +73,7 @@ func (c MessageController) Create(ctx echo.Context) error {
 
 func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan error) {
 	cleanup := func() {
-		Log.Printf("handle: deliveries channel closed")
+		helpers.Log.Printf("handle: deliveries channel closed")
 		done <- nil
 	}
 
@@ -83,7 +82,7 @@ func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan er
 
 	for d := range deliveries {
 		deliveryCount++
-		Log.Printf(
+		helpers.Log.Printf(
 			"got %dB delivery: [%v] %q",
 			len(d.Body),
 			d.DeliveryTag,
@@ -95,7 +94,7 @@ func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan er
 		message, err := new(models.Message).FromJSON(d.Body)
 
 		if err != nil {
-			ErrLog.Printf("Error parsing message: %v", err)
+			helpers.ErrLog.Printf("Error parsing message: %v", err)
 		}
 
 		message.Sender = sender
@@ -103,13 +102,13 @@ func (c MessageController) Consume(deliveries <-chan amqp.Delivery, done chan er
 		errList := message.Send()
 
 		for _, err := range errList {
-			ErrLog.Printf("Error sending message: %v", err)
+			helpers.ErrLog.Printf("Error sending message: %v", err)
 		}
 
 		err = repositories.MessageRepository{DB: c.DB, Queries: c.Queries}.CreateMessage(message)
 
 		if err != nil {
-			ErrLog.Printf("Error saving message: %v", err)
+			helpers.ErrLog.Printf("Error saving message: %v", err)
 		}
 	}
 }

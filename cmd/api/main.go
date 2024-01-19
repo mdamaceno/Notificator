@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/labstack/echo"
 	"github.com/mdamaceno/notificator/app"
 	"github.com/mdamaceno/notificator/config"
 	"github.com/mdamaceno/notificator/internal/db"
+	"github.com/mdamaceno/notificator/internal/helpers"
 )
 
 func main() {
@@ -15,7 +14,7 @@ func main() {
 	defer dbconn.Close()
 
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrLog.Fatalf("Database: %s", err)
 	}
 
 	q := db.New(dbconn)
